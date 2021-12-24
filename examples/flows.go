@@ -6,28 +6,36 @@ import (
 	"github.com/sujit-baniya/flow"
 )
 
+func registerNodes() {
+	flow.AddNode("get-data", GetData)
+	flow.AddNode("store-data", StoreData)
+	flow.AddNode("cancel-registration", CancelRegistration)
+	flow.AddNode("get-image", GetImage)
+	flow.AddNode("create-avatar", CreateAvatar)
+	flow.AddNode("delete-image", DeleteImage)
+	flow.AddNode("throw-error", ThrowError)
+
+	flow.AddBranch("handle-registration", HandleRegistration)
+	flow.AddBranch("handle-image", HandleImage)
+}
+
 func main() {
+	registerNodes()
 	flow1 := flow.New()
-	flow1.Node("get-data", GetData)
-	flow1.Node("store-data", StoreData)
-	flow1.Node("cancel-registration", CancelRegistration)
-	flow1.Node("get-image", GetImage)
-	flow1.Node("create-avatar", CreateAvatar)
-	flow1.Node("delete-image", DeleteImage)
-	flow1.Node("throw-error", ThrowError)
-	flow1.ConditionalNode("handle-registration", HandleRegistration, map[string]string{
+	flow1.ConditionalNode("handle-registration", map[string]string{
 		"pass": "get-image",
 		"fail": "cancel-registration",
 	})
-	flow1.ConditionalNode("handle-image", HandleImage, map[string]string{
+	flow1.ConditionalNode("handle-image", map[string]string{
 		"pass": "create-avatar",
 		"fail": "delete-image",
 	})
 	flow1.Edge("get-data", "handle-registration")
 	flow1.Edge("get-image", "handle-image")
 	flow1.Edge("cancel-registration", "throw-error")
+	flow1.Build()
 	res, err := flow1.Process(flow.DataSource{
-		Payload:   flow.Payload(`{"email": "s.baniy1a.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
+		Payload:   flow.Payload(`{"email": "s.baniya.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
 		RequestID: "asdasdas",
 	})
 	if err != nil {

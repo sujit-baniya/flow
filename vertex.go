@@ -2,7 +2,6 @@ package flow
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 )
 
@@ -14,12 +13,13 @@ type Node interface {
 }
 
 type Payload []byte
+
 type DataSource struct {
 	RequestID     string  `json:"request_id"`
 	Payload       Payload `json:"payload"`
 	Status        string  `json:"status"`
 	CurrentVertex string  `json:"current_vertex"`
-	FailedReason error `json:"failed_reason"`
+	FailedReason  error   `json:"failed_reason"`
 }
 
 func (d DataSource) ConvertTo(rs interface{}) error {
@@ -41,7 +41,7 @@ type Vertex struct {
 	Branch           bool   `json:"branch"`
 	handler          Handler
 	edges            map[string]Node
-	branches            map[string]Node
+	branches         map[string]Node
 	ConditionalNodes map[string]string `json:"conditional_nodes"`
 }
 
@@ -50,7 +50,6 @@ func (v *Vertex) Process(data DataSource) (DataSource, error) {
 		return DataSource{}, errors.New("Required at least one condition for branch")
 	}
 	data.CurrentVertex = v.GetKey()
-	fmt.Println(data.CurrentVertex)
 	response, err := v.handler(data)
 	if err != nil {
 		return DataSource{}, err

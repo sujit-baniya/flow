@@ -1,26 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/sujit-baniya/flow"
 )
-
-func main() {
-	flow1 := flow.New()
-	flow1.Key = "process-avatar-upload"
-	flow1.Node("get-image", GetImage)
-	flow1.Node("create-avatar", CreateAvatar)
-	flow1.Node("delete-image", DeleteImage)
-	flow1.Node("send-email", SendEmail)
-	flow1.ConditionalNode("handle-image", HandleImage, map[string]string{
-		"pass": "create-avatar",
-		"fail": "delete-image",
-	})
-	flow1.Edge("get-image", "handle-image")
-	flow1.Edge("handle-image", "send-email")
-	r, _ := flow1.Process(flow.DataSource{Payload: flow.Payload("https://sujitbaniya.com/logo.svg")})
-	fmt.Println(string(r.Payload))
-}
 
 func data() flow.Payload {
 	return flow.Payload(`{
