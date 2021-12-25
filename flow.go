@@ -162,6 +162,9 @@ func (f *Flow) Build() *Flow {
 		handler := GetNodeHandler(node)
 		if handler != nil {
 			f.node(node, handler)
+		} else {
+			f.Error = errors.New(fmt.Sprintf("No node handler defined for key '%s'", node))
+			return f
 		}
 	}
 	for _, branch := range f.raw.Branches {
@@ -190,8 +193,18 @@ func (f *Flow) Build() *Flow {
 			f.node(outVertex, outNodeHandler)
 		}
 	}
+
+	for _, flowKey := range f.raw.SubFlows {
+		flow := GetFlow(flowKey)
+		flow.Build()
+		f.subFlow(flow)
+	}
 	for _, branch := range f.raw.Branches {
 		branchHandler := GetBranchHandler(branch.Key)
+		if branchHandler == nil {
+			f.Error = errors.New(fmt.Sprintf("No branch handler defined for key '%s'", branch.Key))
+			return f
+		}
 		f.conditionalNode(branch.Key, branchHandler, branch.ConditionalNodes)
 	}
 	for _, edge := range f.raw.Edges {

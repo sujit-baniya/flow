@@ -2,6 +2,7 @@ package flow
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 )
 
@@ -50,6 +51,7 @@ func (v *Vertex) Process(data DataSource) (DataSource, error) {
 		return DataSource{}, errors.New("Required at least one condition for branch")
 	}
 	data.CurrentVertex = v.GetKey()
+	fmt.Println(data.CurrentVertex)
 	response, err := v.handler(data)
 	if err != nil {
 		return DataSource{}, err

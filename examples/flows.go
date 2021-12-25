@@ -40,7 +40,7 @@ func main() {
 	flow1.Edge("get-image", "handle-image")
 	flow1.Edge("cancel-registration", "throw-error")
 	res, err := flow1.Build().Process(flow.DataSource{
-		Payload:   flow.Payload(`{"email": "s.baniy8a.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
+		Payload:   flow.Payload(`{"email": "s.baniya.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
 		RequestID: "asdasdas",
 	})
 	if err != nil {
