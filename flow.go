@@ -49,13 +49,16 @@ func (f *Flow) Node(vertex string) *Flow {
 }
 
 func (f *Flow) node(vertex string, handler Handler) *Flow {
-	f.nodes[vertex] = &Vertex{
-		Key:              vertex,
-		ConditionalNodes: make(map[string]string),
-		handler:          handler,
-		edges:            make(map[string]Node),
-		branches:         make(map[string]Node),
+	if _, ok := f.nodes[vertex]; !ok {
+		f.nodes[vertex] = &Vertex{
+			Key:              vertex,
+			ConditionalNodes: make(map[string]string),
+			handler:          handler,
+			edges:            make(map[string]Node),
+			branches:         make(map[string]Node),
+		}
 	}
+
 	return f
 }
 
@@ -100,21 +103,23 @@ func (f *Flow) ConditionalNode(vertex string, conditions map[string]string) *Flo
 }
 
 func (f *Flow) conditionalNode(vertex string, handler Handler, conditions map[string]string) *Flow {
-	branches := make(map[string]Node)
-	node := &Vertex{
-		Key:              vertex,
-		Branch:           true,
-		handler:          handler,
-		ConditionalNodes: conditions,
-	}
-	for condition, nodeKey := range conditions {
-		f.outVertex[nodeKey] = true
-		if n, ok := f.nodes[nodeKey]; ok {
-			branches[condition] = n
+	if _, ok := f.nodes[vertex]; !ok {
+		branches := make(map[string]Node)
+		node := &Vertex{
+			Key:              vertex,
+			Branch:           true,
+			handler:          handler,
+			ConditionalNodes: conditions,
 		}
+		for condition, nodeKey := range conditions {
+			f.outVertex[nodeKey] = true
+			if n, ok := f.nodes[nodeKey]; ok {
+				branches[condition] = n
+			}
+		}
+		node.branches = branches
+		f.nodes[vertex] = node
 	}
-	node.branches = branches
-	f.nodes[vertex] = node
 	return f
 }
 
@@ -160,10 +165,8 @@ func (f *Flow) Build() *Flow {
 				nodeHandler := GetNodeHandler(node)
 				if nodeHandler != nil {
 					f.node(node, nodeHandler)
-					fmt.Println(f.nodes)
 				}
 			}
-			f.conditionalNode(branch.Key, branchHandler, branch.ConditionalNodes)
 		}
 	}
 	if len(f.raw.Edges) == 0 {
@@ -180,7 +183,14 @@ func (f *Flow) Build() *Flow {
 		if outNodeHandler != nil {
 			f.node(outVertex, outNodeHandler)
 		}
-		fmt.Println(f.nodes)
+	}
+	for _, branch := range f.raw.Branches {
+		branchHandler := GetBranchHandler(branch.Key)
+		f.conditionalNode(branch.Key, branchHandler, branch.ConditionalNodes)
+	}
+	for _, edge := range f.raw.Edges {
+		inVertex := edge[0]
+		outVertex := edge[1]
 		f.edge(inVertex, outVertex)
 	}
 	if noEdges || noNodes {
