@@ -19,6 +19,7 @@ type Flow struct {
 
 type RawFlow struct {
 	Nodes    []string   `json:"nodes"`
+	SubFlows []string   `json:"sub_flows"`
 	Branches []Branch   `json:"branches"`
 	Edges    [][]string `json:"edges"`
 }
@@ -145,7 +146,12 @@ func (f *Flow) AddEdge(node Node) {
 	f.nodes[node.GetKey()] = node
 }
 
-func (f *Flow) SubFlow(flow *Flow) *Flow {
+func (f *Flow) SubFlow(flow string) *Flow {
+	f.raw.SubFlows = append(f.raw.SubFlows, flow)
+	return f
+}
+
+func (f *Flow) subFlow(flow *Flow) *Flow {
 	f.nodes[flow.GetKey()] = flow
 	return f
 }
@@ -233,4 +239,22 @@ func GetBranchList() []string {
 
 func GetBranchHandler(node string) Handler {
 	return BranchList[node]
+}
+
+var FlowList = map[string]*Flow{}
+
+func AddFlow(node string, flow *Flow) {
+	FlowList[node] = flow
+}
+
+func GetFlowList() []string {
+	var flows []string
+	for flow, _ := range FlowList {
+		flows = append(flows, flow)
+	}
+	return flows
+}
+
+func GetFlow(node string) *Flow {
+	return FlowList[node]
 }
