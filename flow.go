@@ -8,12 +8,12 @@ import (
 
 type Flow struct {
 	Key       string `json:"key"`
+	Branch    bool   `json:"branch"`
+	Error     error
 	firstNode Node
-	Branch    bool `json:"branch"`
 	nodes     map[string]Node
 	inVertex  map[string]bool
 	outVertex map[string]bool
-	Error     error
 	raw       RawFlow
 }
 
@@ -39,7 +39,11 @@ func New(raw ...Payload) *Flow {
 		return f
 	}
 	var rawFlow RawFlow
-	json.Unmarshal(raw[0], &rawFlow)
+	err := json.Unmarshal(raw[0], &rawFlow)
+	if err != nil {
+		f.Error = err
+		return f
+	}
 	f.raw = rawFlow
 	return f
 }
@@ -194,11 +198,6 @@ func (f *Flow) Build() *Flow {
 		}
 	}
 
-	for _, flowKey := range f.raw.SubFlows {
-		flow := GetFlow(flowKey)
-		flow.Build()
-		f.subFlow(flow)
-	}
 	for _, branch := range f.raw.Branches {
 		branchHandler := GetBranchHandler(branch.Key)
 		if branchHandler == nil {
@@ -228,46 +227,12 @@ func GetNodeHandler(node string) Handler {
 	return NodeList[node]
 }
 
-func GetNodeList() []string {
-	var nodes []string
-	for node, _ := range NodeList {
-		nodes = append(nodes, node)
-	}
-	return nodes
-}
-
 var BranchList = map[string]Handler{}
 
 func AddBranch(node string, handler Handler) {
 	BranchList[node] = handler
 }
 
-func GetBranchList() []string {
-	var branches []string
-	for branch, _ := range BranchList {
-		branches = append(branches, branch)
-	}
-	return branches
-}
-
 func GetBranchHandler(node string) Handler {
 	return BranchList[node]
-}
-
-var FlowList = map[string]*Flow{}
-
-func AddFlow(node string, flow *Flow) {
-	FlowList[node] = flow
-}
-
-func GetFlowList() []string {
-	var flows []string
-	for flow, _ := range FlowList {
-		flows = append(flows, flow)
-	}
-	return flows
-}
-
-func GetFlow(node string) *Flow {
-	return FlowList[node]
 }

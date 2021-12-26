@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/sujit-baniya/flow"
 )
 
@@ -68,8 +67,7 @@ func CheckSenderID(source flow.DataSource) (flow.DataSource, error) {
 }
 
 func ValidateRequest(source flow.DataSource) (flow.DataSource, error) {
-	source.Status = "fail"
-	source.FailedReason = errors.New("Invalid Request")
+	source.Status = "pass"
 	return source, nil
 }
 
@@ -142,7 +140,7 @@ func normalFlow() {
 	flow1.Edge("send-message", "store-message")
 	flow1.Edge("store-message", "send-callback")
 	res, err := flow1.Build().Process(flow.DataSource{
-		Payload:   flow.Payload(`{"email": "s.baniy8a.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
+		Payload:   flow.Payload(`{"email": "s.baniya.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
 		RequestID: "asdasdas",
 	})
 	if err != nil {

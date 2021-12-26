@@ -2,6 +2,7 @@ package flow
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 )
 
@@ -54,6 +55,7 @@ func (v *Vertex) Process(data DataSource) (DataSource, error) {
 		data.visitedVertices = make(map[string]int)
 	}
 	data.CurrentVertex = v.GetKey()
+	fmt.Println(data.CurrentVertex)
 	data.visitedVertices[v.GetKey()]++
 	response, err := v.handler(data)
 	if err != nil {
