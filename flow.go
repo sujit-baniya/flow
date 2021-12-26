@@ -8,8 +8,7 @@ import (
 )
 
 type Flow struct {
-	Key       string `json:"key"`
-	Branch    bool   `json:"branch"`
+	Key       string
 	Error     error
 	firstNode Node
 	nodes     map[string]Node
@@ -20,7 +19,7 @@ type Flow struct {
 
 type RawFlow struct {
 	Nodes    []string   `json:"nodes"`
-	Loops    [][]string `json:"Loops"`
+	Loops    [][]string `json:"loops"`
 	Branches []Branch   `json:"branches"`
 	Edges    [][]string `json:"edges"`
 }
@@ -75,11 +74,13 @@ func (f *Flow) Loop(inVertex, childVertex string) *Flow {
 
 func (f *Flow) loop(inVertex, childVertex string, inHandler Handler) *Flow {
 	f.outVertex[childVertex] = true
-	loop := &Loop{
-		Key:       inVertex,
-		SingleKey: childVertex,
-		handler:   inHandler,
-		Single:    f.nodes[childVertex],
+	loop := &Vertex{
+		Key:  inVertex,
+		Type: "Loop",
+		loops: map[string]Node{
+			childVertex: f.nodes[childVertex],
+		},
+		handler: inHandler,
 	}
 	f.nodes[inVertex] = loop
 	return f
@@ -95,8 +96,8 @@ func (f *Flow) Process(ctx context.Context, data Data) (Data, error) {
 	return f.firstNode.Process(ctx, data)
 }
 
-func (f *Flow) IsBranch() bool {
-	return f.Branch
+func (f *Flow) GetType() string {
+	return "Flow"
 }
 
 func (f *Flow) GetKey() string {
@@ -178,7 +179,7 @@ func (f *Flow) conditionalNode(vertex string, handler Handler, conditions map[st
 		branches := make(map[string]Node)
 		node := &Vertex{
 			Key:              vertex,
-			Branch:           true,
+			Type:             "Branch",
 			handler:          handler,
 			ConditionalNodes: conditions,
 		}
@@ -198,6 +199,7 @@ func (f *Flow) node(vertex string, handler Handler) *Flow {
 	if _, ok := f.nodes[vertex]; !ok {
 		f.nodes[vertex] = &Vertex{
 			Key:              vertex,
+			Type:             "Vertex",
 			ConditionalNodes: make(map[string]string),
 			handler:          handler,
 			edges:            make(map[string]Node),

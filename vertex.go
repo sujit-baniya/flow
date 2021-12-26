@@ -2,13 +2,13 @@ package flow
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"github.com/pkg/errors"
 )
 
 type Vertex struct {
 	Key              string `json:"key"`
-	Branch           bool   `json:"branch"`
+	Type             string `json:"type"`
 	handler          Handler
 	edges            map[string]Node
 	branches         map[string]Node
@@ -17,20 +17,33 @@ type Vertex struct {
 }
 
 func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
-	if v.IsBranch() && len(v.ConditionalNodes) == 0 {
+	if v.GetType() == "Branch" && len(v.ConditionalNodes) == 0 {
 		return Data{}, errors.New("Required at least one condition for branch")
 	}
 	if data.visitedVertices == nil {
 		data.visitedVertices = make(map[string]int)
 	}
 	data.CurrentVertex = v.GetKey()
-	fmt.Println(data.CurrentVertex)
 	data.visitedVertices[v.GetKey()]++
 	response, err := v.handler(ctx, data)
 	if err != nil {
 		return Data{}, err
 	}
-
+	if v.Type == "Loop" {
+		var rs []interface{}
+		err = json.Unmarshal(response.Payload, &rs)
+		for _, single := range rs {
+			payload, _ := json.Marshal(single)
+			dataPayload := data
+			dataPayload.Payload = payload
+			for _, loop := range v.loops {
+				response, err = loop.Process(ctx, dataPayload)
+				if err != nil {
+					return Data{}, err
+				}
+			}
+		}
+	}
 	if val, ok := v.branches[response.GetStatus()]; ok {
 		response, err = val.Process(ctx, response)
 	}
@@ -40,11 +53,12 @@ func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
 			return Data{}, err
 		}
 	}
+
 	return response, err
 }
 
-func (v *Vertex) IsBranch() bool {
-	return v.Branch
+func (v *Vertex) GetType() string {
+	return v.Type
 }
 
 func (v *Vertex) GetKey() string {

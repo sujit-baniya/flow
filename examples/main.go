@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/sujit-baniya/flow"
 )
@@ -42,7 +43,13 @@ func ThrowError(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, data.FailedReason
 }
 
+func ForEachMessage(ctx context.Context, d flow.Data) (flow.Data, error) {
+
+	return d, nil
+}
+
 func nodes() {
+	flow.AddNode("for-each-message", ForEachMessage)
 	flow.AddNode("receive-request", ReceiveRequest)
 	flow.AddNode("send-single", SendSingle)
 	flow.AddNode("estimate-single", EstimateSingle)
@@ -88,8 +95,8 @@ func CheckBalance(ctx context.Context, source flow.Data) (flow.Data, error) {
 }
 
 func main() {
-	// rawFlow()
-	normalFlow()
+	rawFlow()
+	// normalFlow()
 }
 
 func rawFlow() {
@@ -129,10 +136,11 @@ func normalFlow() {
 		"fail": "prepare-message",
 	})
 	flow1.ConditionalNode("validate-request", map[string]string{
-		"pass": "send-single",
+		"pass": "for-each-message",
 		"fail": "throw-error",
 	})
 	flow1.Edge("receive-request", "validate-request")
+	flow1.Loop("for-each-message", "send-single")
 	flow1.Edge("send-single", "check-sender-id")
 	flow1.Edge("check-sender-id", "check-message")
 	flow1.Edge("estimate-single", "check-balance")
@@ -140,8 +148,10 @@ func normalFlow() {
 	flow1.Edge("get-provider", "send-message")
 	flow1.Edge("send-message", "store-message")
 	flow1.Edge("store-message", "send-callback")
+	messages := []string{"this", "is", "a", "test"}
+	bt, _ := json.Marshal(messages)
 	res, err := flow1.Build().Process(context.Background(), flow.Data{
-		Payload:   flow.Payload(`{"email": "s.baniya.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
+		Payload:   bt,
 		RequestID: "asdasdas",
 	})
 	if err != nil {
