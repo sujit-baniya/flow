@@ -145,11 +145,14 @@ func (f *Flow) Build() *Flow {
 			f.node(outVertex, outNodeHandler)
 		}
 	}
-
 	for _, loop := range f.raw.Loops {
 		vertex := loop[0]
 		childVertex := loop[1]
 		loopHandler := GetNodeHandler(vertex)
+		childHandler := GetNodeHandler(childVertex)
+		if childHandler != nil {
+			f.node(childVertex, childHandler)
+		}
 		if loopHandler != nil {
 			f.loop(vertex, childVertex, loopHandler)
 		}
