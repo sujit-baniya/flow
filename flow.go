@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
@@ -19,7 +20,7 @@ type Flow struct {
 
 type RawFlow struct {
 	Nodes    []string   `json:"nodes"`
-	SubFlows []string   `json:"sub_flows"`
+	Loops    [][]string `json:"Loops"`
 	Branches []Branch   `json:"branches"`
 	Edges    [][]string `json:"edges"`
 }
@@ -53,48 +54,8 @@ func (f *Flow) Node(vertex string) *Flow {
 	return f
 }
 
-func (f *Flow) node(vertex string, handler Handler) *Flow {
-	if _, ok := f.nodes[vertex]; !ok {
-		f.nodes[vertex] = &Vertex{
-			Key:              vertex,
-			ConditionalNodes: make(map[string]string),
-			handler:          handler,
-			edges:            make(map[string]Node),
-			branches:         make(map[string]Node),
-		}
-	}
-
-	return f
-}
-
 func (f *Flow) Edge(inVertex, outVertex string) *Flow {
 	f.raw.Edges = append(f.raw.Edges, []string{inVertex, outVertex})
-	return f
-}
-
-func (f *Flow) edge(inVertex, outVertex string) *Flow {
-	var outNode, inNode Node
-	var okOutNode, okInNode bool
-	outNode, okOutNode = f.nodes[outVertex]
-	inNode, okInNode = f.nodes[inVertex]
-	if !okOutNode {
-		f.Error = errors.New(fmt.Sprintf("Output Vertex with key %s doesn't exist", outVertex))
-		return f
-	}
-	if !okInNode {
-		f.Error = errors.New(fmt.Sprintf("Input Vertex with key %s doesn't exist", inVertex))
-		return f
-	}
-	f.inVertex[inVertex] = true
-	f.outVertex[outVertex] = true
-	inOk := f.inVertex[inVertex]
-	outOk := f.outVertex[inVertex]
-	if inOk && !outOk {
-		f.firstNode = f.nodes[inVertex]
-	}
-	if okInNode && okOutNode {
-		inNode.AddEdge(outNode)
-	}
 	return f
 }
 
@@ -107,35 +68,31 @@ func (f *Flow) ConditionalNode(vertex string, conditions map[string]string) *Flo
 	return f
 }
 
-func (f *Flow) conditionalNode(vertex string, handler Handler, conditions map[string]string) *Flow {
-	if _, ok := f.nodes[vertex]; !ok {
-		branches := make(map[string]Node)
-		node := &Vertex{
-			Key:              vertex,
-			Branch:           true,
-			handler:          handler,
-			ConditionalNodes: conditions,
-		}
-		for condition, nodeKey := range conditions {
-			f.outVertex[nodeKey] = true
-			if n, ok := f.nodes[nodeKey]; ok {
-				branches[condition] = n
-			}
-		}
-		node.branches = branches
-		f.nodes[vertex] = node
-	}
+func (f *Flow) Loop(inVertex, childVertex string) *Flow {
+	f.raw.Loops = append(f.raw.Loops, []string{inVertex, childVertex})
 	return f
 }
 
-func (f *Flow) Process(data DataSource) (DataSource, error) {
+func (f *Flow) loop(inVertex, childVertex string, inHandler Handler) *Flow {
+	f.outVertex[childVertex] = true
+	loop := &Loop{
+		Key:       inVertex,
+		SingleKey: childVertex,
+		handler:   inHandler,
+		Single:    f.nodes[childVertex],
+	}
+	f.nodes[inVertex] = loop
+	return f
+}
+
+func (f *Flow) Process(ctx context.Context, data Data) (Data, error) {
 	if f.Error != nil {
-		return DataSource{}, f.Error
+		return Data{}, f.Error
 	}
 	if f.firstNode == nil {
-		return DataSource{}, errors.New("No edges defined")
+		return Data{}, errors.New("No edges defined")
 	}
-	return f.firstNode.Process(data)
+	return f.firstNode.Process(ctx, data)
 }
 
 func (f *Flow) IsBranch() bool {
@@ -148,16 +105,6 @@ func (f *Flow) GetKey() string {
 
 func (f *Flow) AddEdge(node Node) {
 	f.nodes[node.GetKey()] = node
-}
-
-func (f *Flow) SubFlow(flow string) *Flow {
-	f.raw.SubFlows = append(f.raw.SubFlows, flow)
-	return f
-}
-
-func (f *Flow) subFlow(flow *Flow) *Flow {
-	f.nodes[flow.GetKey()] = flow
-	return f
 }
 
 func (f *Flow) Build() *Flow {
@@ -198,6 +145,14 @@ func (f *Flow) Build() *Flow {
 		}
 	}
 
+	for _, loop := range f.raw.Loops {
+		vertex := loop[0]
+		childVertex := loop[1]
+		loopHandler := GetNodeHandler(vertex)
+		if loopHandler != nil {
+			f.loop(vertex, childVertex, loopHandler)
+		}
+	}
 	for _, branch := range f.raw.Branches {
 		branchHandler := GetBranchHandler(branch.Key)
 		if branchHandler == nil {
@@ -206,6 +161,7 @@ func (f *Flow) Build() *Flow {
 		}
 		f.conditionalNode(branch.Key, branchHandler, branch.ConditionalNodes)
 	}
+
 	for _, edge := range f.raw.Edges {
 		inVertex := edge[0]
 		outVertex := edge[1]
@@ -217,14 +173,65 @@ func (f *Flow) Build() *Flow {
 	return f
 }
 
-var NodeList = map[string]Handler{}
-
-func AddNode(node string, handler Handler) {
-	NodeList[node] = handler
+func (f *Flow) conditionalNode(vertex string, handler Handler, conditions map[string]string) *Flow {
+	if _, ok := f.nodes[vertex]; !ok {
+		branches := make(map[string]Node)
+		node := &Vertex{
+			Key:              vertex,
+			Branch:           true,
+			handler:          handler,
+			ConditionalNodes: conditions,
+		}
+		for condition, nodeKey := range conditions {
+			f.outVertex[nodeKey] = true
+			if n, ok := f.nodes[nodeKey]; ok {
+				branches[condition] = n
+			}
+		}
+		node.branches = branches
+		f.nodes[vertex] = node
+	}
+	return f
 }
 
-func GetNodeHandler(node string) Handler {
-	return NodeList[node]
+func (f *Flow) node(vertex string, handler Handler) *Flow {
+	if _, ok := f.nodes[vertex]; !ok {
+		f.nodes[vertex] = &Vertex{
+			Key:              vertex,
+			ConditionalNodes: make(map[string]string),
+			handler:          handler,
+			edges:            make(map[string]Node),
+			branches:         make(map[string]Node),
+		}
+	}
+
+	return f
+}
+
+func (f *Flow) edge(inVertex, outVertex string) *Flow {
+	var outNode, inNode Node
+	var okOutNode, okInNode bool
+	outNode, okOutNode = f.nodes[outVertex]
+	inNode, okInNode = f.nodes[inVertex]
+	if !okOutNode {
+		f.Error = errors.New(fmt.Sprintf("Output Vertex with key %s doesn't exist", outVertex))
+		return f
+	}
+	if !okInNode {
+		f.Error = errors.New(fmt.Sprintf("Input Vertex with key %s doesn't exist", inVertex))
+		return f
+	}
+	f.inVertex[inVertex] = true
+	f.outVertex[outVertex] = true
+	inOk := f.inVertex[inVertex]
+	outOk := f.outVertex[inVertex]
+	if inOk && !outOk {
+		f.firstNode = f.nodes[inVertex]
+	}
+	if okInNode && okOutNode {
+		inNode.AddEdge(outNode)
+	}
+	return f
 }
 
 var BranchList = map[string]Handler{}

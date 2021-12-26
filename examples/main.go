@@ -1,43 +1,44 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/sujit-baniya/flow"
 )
 
-func SendSingle(data flow.DataSource) (flow.DataSource, error) {
+func SendSingle(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func EstimateSingle(data flow.DataSource) (flow.DataSource, error) {
+func EstimateSingle(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func DeductBalance(data flow.DataSource) (flow.DataSource, error) {
+func DeductBalance(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func GetProvider(data flow.DataSource) (flow.DataSource, error) {
+func GetProvider(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func SendMessage(data flow.DataSource) (flow.DataSource, error) {
+func SendMessage(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func StoreMessage(data flow.DataSource) (flow.DataSource, error) {
+func StoreMessage(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func SendCallback(data flow.DataSource) (flow.DataSource, error) {
+func SendCallback(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func ReceiveRequest(data flow.DataSource) (flow.DataSource, error) {
+func ReceiveRequest(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, nil
 }
 
-func ThrowError(data flow.DataSource) (flow.DataSource, error) {
+func ThrowError(ctx context.Context, data flow.Data) (flow.Data, error) {
 	return data, data.FailedReason
 }
 
@@ -61,27 +62,27 @@ func branches() {
 	flow.AddBranch("validate-request", ValidateRequest)
 }
 
-func CheckSenderID(source flow.DataSource) (flow.DataSource, error) {
+func CheckSenderID(ctx context.Context, source flow.Data) (flow.Data, error) {
 	source.Status = "pass"
 	return source, nil
 }
 
-func ValidateRequest(source flow.DataSource) (flow.DataSource, error) {
+func ValidateRequest(ctx context.Context, source flow.Data) (flow.Data, error) {
 	source.Status = "pass"
 	return source, nil
 }
 
-func CheckMessage(source flow.DataSource) (flow.DataSource, error) {
+func CheckMessage(ctx context.Context, source flow.Data) (flow.Data, error) {
 	source.Status = "pass"
 	return source, nil
 }
 
-func PrepareMessage(source flow.DataSource) (flow.DataSource, error) {
+func PrepareMessage(ctx context.Context, source flow.Data) (flow.Data, error) {
 	source.Status = "success"
 	return source, nil
 }
 
-func CheckBalance(source flow.DataSource) (flow.DataSource, error) {
+func CheckBalance(ctx context.Context, source flow.Data) (flow.Data, error) {
 	source.Status = "pass"
 	return source, nil
 }
@@ -95,7 +96,7 @@ func rawFlow() {
 	nodes()
 	branches()
 	flow1 := flow.New(data())
-	res, err := flow1.Build().Process(flow.DataSource{
+	res, err := flow1.Build().Process(context.Background(), flow.Data{
 		Payload:   flow.Payload(`{"email": "s.baniy8a.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
 		RequestID: "asdasdas",
 	})
@@ -139,7 +140,7 @@ func normalFlow() {
 	flow1.Edge("get-provider", "send-message")
 	flow1.Edge("send-message", "store-message")
 	flow1.Edge("store-message", "send-callback")
-	res, err := flow1.Build().Process(flow.DataSource{
+	res, err := flow1.Build().Process(context.Background(), flow.Data{
 		Payload:   flow.Payload(`{"email": "s.baniya.np@gmail.com", "password": "123456", "avatar": "image.svg"}`),
 		RequestID: "asdasdas",
 	})
