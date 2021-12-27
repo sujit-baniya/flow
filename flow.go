@@ -72,20 +72,6 @@ func (f *Flow) Loop(inVertex, childVertex string) *Flow {
 	return f
 }
 
-func (f *Flow) loop(inVertex, childVertex string, inHandler Handler) *Flow {
-	f.outVertex[childVertex] = true
-	loop := &Vertex{
-		Key:  inVertex,
-		Type: "Loop",
-		loops: map[string]Node{
-			childVertex: f.nodes[childVertex],
-		},
-		handler: inHandler,
-	}
-	f.nodes[inVertex] = loop
-	return f
-}
-
 func (f *Flow) Process(ctx context.Context, data Data) (Data, error) {
 	if f.Error != nil {
 		return Data{}, f.Error
@@ -217,5 +203,19 @@ func (f *Flow) edge(inVertex, outVertex string) *Flow {
 	if okInNode && okOutNode {
 		inNode.AddEdge(outNode)
 	}
+	return f
+}
+
+func (f *Flow) loop(inVertex, childVertex string, inHandler Handler) *Flow {
+	f.outVertex[childVertex] = true
+	loop := &Vertex{
+		Key:  inVertex,
+		Type: "Loop",
+		loops: map[string]Node{
+			childVertex: f.nodes[childVertex],
+		},
+		handler: inHandler,
+	}
+	f.nodes[inVertex] = loop
 	return f
 }
