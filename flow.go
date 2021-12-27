@@ -111,22 +111,13 @@ func (f *Flow) AddEdge(node Node) {
 func (f *Flow) Build() *Flow {
 	var noNodes, noEdges bool
 	for _, node := range f.raw.Nodes {
-		handler := GetNodeHandler(node)
-		if handler != nil {
-			f.node(node, handler)
-		} else {
-			f.Error = errors.New(fmt.Sprintf("No node handler defined for key '%s'", node))
-			return f
-		}
+		f.addNode(node)
 	}
 	for _, branch := range f.raw.Branches {
-		branchHandler := GetBranchHandler(branch.Key)
+		branchHandler := GetNodeHandler(branch.Key)
 		if branchHandler != nil {
 			for _, node := range branch.ConditionalNodes {
-				nodeHandler := GetNodeHandler(node)
-				if nodeHandler != nil {
-					f.node(node, nodeHandler)
-				}
+				f.addNode(node)
 			}
 		}
 	}
@@ -134,31 +125,18 @@ func (f *Flow) Build() *Flow {
 		noEdges = true
 	}
 	for _, edge := range f.raw.Edges {
-		inVertex := edge[0]
-		outVertex := edge[1]
-		inNodeHandler := GetNodeHandler(inVertex)
-		if inNodeHandler != nil {
-			f.node(inVertex, inNodeHandler)
-		}
-		outNodeHandler := GetNodeHandler(outVertex)
-		if outNodeHandler != nil {
-			f.node(outVertex, outNodeHandler)
-		}
+		f.addNode(edge[0])
+		f.addNode(edge[1])
 	}
 	for _, loop := range f.raw.Loops {
-		vertex := loop[0]
-		childVertex := loop[1]
-		loopHandler := GetNodeHandler(vertex)
-		childHandler := GetNodeHandler(childVertex)
-		if childHandler != nil {
-			f.node(childVertex, childHandler)
-		}
+		loopHandler := GetNodeHandler(loop[0])
+		f.addNode(loop[1])
 		if loopHandler != nil {
-			f.loop(vertex, childVertex, loopHandler)
+			f.loop(loop[0], loop[1], loopHandler)
 		}
 	}
 	for _, branch := range f.raw.Branches {
-		branchHandler := GetBranchHandler(branch.Key)
+		branchHandler := GetNodeHandler(branch.Key)
 		if branchHandler == nil {
 			f.Error = errors.New(fmt.Sprintf("No branch handler defined for key '%s'", branch.Key))
 			return f
@@ -167,9 +145,7 @@ func (f *Flow) Build() *Flow {
 	}
 
 	for _, edge := range f.raw.Edges {
-		inVertex := edge[0]
-		outVertex := edge[1]
-		f.edge(inVertex, outVertex)
+		f.edge(edge[0], edge[1])
 	}
 	if noEdges || noNodes {
 		f.Error = errors.New("No vertex or edges are defined")
@@ -177,24 +153,29 @@ func (f *Flow) Build() *Flow {
 	return f
 }
 
-func (f *Flow) conditionalNode(vertex string, handler Handler, conditions map[string]string) *Flow {
-	if _, ok := f.nodes[vertex]; !ok {
-		branches := make(map[string]Node)
-		node := &Vertex{
-			Key:              vertex,
-			Type:             "Branch",
-			handler:          handler,
-			ConditionalNodes: conditions,
-		}
-		for condition, nodeKey := range conditions {
-			f.outVertex[nodeKey] = true
-			if n, ok := f.nodes[nodeKey]; ok {
-				branches[condition] = n
-			}
-		}
-		node.branches = branches
-		f.nodes[vertex] = node
+func (f *Flow) addNode(node string) {
+	handler := GetNodeHandler(node)
+	if handler != nil {
+		f.node(node, handler)
 	}
+}
+
+func (f *Flow) conditionalNode(vertex string, handler Handler, conditions map[string]string) *Flow {
+	branches := make(map[string]Node)
+	node := &Vertex{
+		Key:              vertex,
+		Type:             "Branch",
+		handler:          handler,
+		ConditionalNodes: conditions,
+	}
+	for condition, nodeKey := range conditions {
+		f.outVertex[nodeKey] = true
+		if n, ok := f.nodes[nodeKey]; ok {
+			branches[condition] = n
+		}
+	}
+	node.branches = branches
+	f.nodes[vertex] = node
 	return f
 }
 
@@ -237,14 +218,4 @@ func (f *Flow) edge(inVertex, outVertex string) *Flow {
 		inNode.AddEdge(outNode)
 	}
 	return f
-}
-
-var BranchList = map[string]Handler{}
-
-func AddBranch(node string, handler Handler) {
-	BranchList[node] = handler
-}
-
-func GetBranchHandler(node string) Handler {
-	return BranchList[node]
 }

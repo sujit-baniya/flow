@@ -20,7 +20,7 @@ func ForEachWord(ctx context.Context, d flow.Data) (flow.Data, error) {
 }
 
 func WordUpperCase(ctx context.Context, d flow.Data) (flow.Data, error) {
-	d.Payload = flow.Payload(strings.ToTitle(d.ToString()))
+	d.Payload = flow.Payload(strings.ToTitle(strings.ToLower(d.ToString())))
 	fmt.Println(d.ToString())
 	return d, nil
 }

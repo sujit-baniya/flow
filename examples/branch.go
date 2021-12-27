@@ -34,9 +34,9 @@ func CancelRegistration(ctx context.Context, d flow.Data) (flow.Data, error) {
 
 func registrationNodes() {
 	flow.AddNode("get-registration", GetRegistration)
-	flow.AddBranch("verify-user", VerifyUser)
 	flow.AddNode("create-user", CreateUser)
 	flow.AddNode("cancel-registration", CancelRegistration)
+	flow.AddNode("verify-user", VerifyUser)
 }
 
 type Registration struct {
