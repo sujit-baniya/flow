@@ -3,8 +3,8 @@ package flow
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 )
 
 type Flow struct {

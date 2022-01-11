@@ -3,7 +3,7 @@ package flow
 import (
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 type Vertex struct {
@@ -18,7 +18,7 @@ type Vertex struct {
 
 func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
 	if v.GetType() == "Branch" && len(v.ConditionalNodes) == 0 {
-		return Data{}, errors.New("Required at least one condition for branch")
+		return Data{}, errors.New("required at least one condition for branch")
 	}
 	if data.visitedVertices == nil {
 		data.visitedVertices = make(map[string]int)

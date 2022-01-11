@@ -11,6 +11,7 @@ func GetRegistration(ctx context.Context, d flow.Data) (flow.Data, error) {
 	return d, nil
 }
 
+// Conditional Vertex
 func VerifyUser(ctx context.Context, d flow.Data) (flow.Data, error) {
 	var reg Registration
 	d.ConvertTo(&reg)

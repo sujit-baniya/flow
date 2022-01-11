@@ -35,7 +35,7 @@ func basicFlow() {
 }
 
 func basicRawFlow() {
-	nodes()
+	basicNodes()
 	rawFlow := []byte(`{
 		"edges": [
 			["message", "send"]
