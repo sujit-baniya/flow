@@ -36,7 +36,7 @@ func main() {
 	flow1 := flow.New()
 	flow1.Loop("for-each-word", "upper-case")
 	flow1.Edge("get-sentence", "for-each-word")
-	_, e := flow1.Build().Process(context.Background(), flow.Data{
+	_, e := flow1.Process(context.Background(), flow.Data{
 		Payload: flow.Payload("this is a sentence"),
 	})
 	if e != nil {

@@ -77,7 +77,10 @@ func (f *Flow) Process(ctx context.Context, data Data) (Data, error) {
 		return Data{}, f.Error
 	}
 	if f.firstNode == nil {
-		return Data{}, errors.New("No edges defined")
+		f.Build()
+	}
+	if f.firstNode == nil {
+		return Data{}, errors.New("no edges defined")
 	}
 	return f.firstNode.Process(ctx, data)
 }
@@ -134,7 +137,7 @@ func (f *Flow) Build() *Flow {
 		f.edge(edge[0], edge[1])
 	}
 	if noEdges || noNodes {
-		f.Error = errors.New("No vertex or edges are defined")
+		f.Error = errors.New("no vertex or edges are defined")
 	}
 	return f
 }

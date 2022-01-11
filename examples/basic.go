@@ -42,7 +42,7 @@ func basicRawFlow() {
 		]
 	}`)
 	flow1 := flow.New(rawFlow)
-	response, e := flow1.Build().Process(context.Background(), flow.Data{
+	response, e := flow1.Process(context.Background(), flow.Data{
 		Payload: flow.Payload("Payload"),
 	})
 	if e != nil {

@@ -67,14 +67,14 @@ func basicRegistrationFlow() {
 		Password: "admin",
 	}
 	reg2, _ := json.Marshal(registration2)
-	response, e := flow1.Build().Process(context.Background(), flow.Data{
+	response, e := flow1.Process(context.Background(), flow.Data{
 		Payload: reg1,
 	})
 	if e != nil {
 		panic(e)
 	}
 	fmt.Println(response.ToString())
-	response, e = flow1.Build().Process(context.Background(), flow.Data{
+	response, e = flow1.Process(context.Background(), flow.Data{
 		Payload: reg2,
 	})
 	if e != nil {
@@ -111,14 +111,14 @@ func basicRegistrationRawFlow() {
 		Password: "admin",
 	}
 	reg2, _ := json.Marshal(registration2)
-	response, e := flow1.Build().Process(context.Background(), flow.Data{
+	response, e := flow1.Process(context.Background(), flow.Data{
 		Payload: reg1,
 	})
 	if e != nil {
 		panic(e)
 	}
 	fmt.Println(response.ToString())
-	response, e = flow1.Build().Process(context.Background(), flow.Data{
+	response, e = flow1.Process(context.Background(), flow.Data{
 		Payload: reg2,
 	})
 	if e != nil {
