@@ -20,11 +20,7 @@ func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
 	if v.GetType() == "Branch" && len(v.ConditionalNodes) == 0 {
 		return Data{}, errors.New("required at least one condition for branch")
 	}
-	if data.visitedVertices == nil {
-		data.visitedVertices = make(map[string]int)
-	}
 	data.CurrentVertex = v.GetKey()
-	data.visitedVertices[v.GetKey()]++
 	response, err := v.handler(ctx, data)
 	if err != nil {
 		return Data{}, err
