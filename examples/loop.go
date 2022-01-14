@@ -22,7 +22,7 @@ func ForEachWord(ctx context.Context, d flow.Data) (flow.Data, error) {
 func WordUpperCase(ctx context.Context, d flow.Data) (flow.Data, error) {
 	var word string
 	_ = json.Unmarshal(d.Payload, &word)
-	d.Payload = flow.Payload(strings.ToTitle(strings.ToLower(word)))
+	d.Payload = flow.Payload(strings.Title(strings.ToLower(word)))
 	return d, nil
 }
 
