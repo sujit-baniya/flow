@@ -9,8 +9,6 @@ type Node interface {
 	GetKey() string
 }
 
-type Payload []byte
-
 type Handler func(ctx context.Context, data Data) (Data, error)
 
 var nodeList = map[string]Handler{}

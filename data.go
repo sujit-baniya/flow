@@ -1,8 +1,10 @@
 package flow
 
 import (
-	"encoding/json"
+	"github.com/goccy/go-json"
 )
+
+type Payload []byte
 
 type Data struct {
 	RequestID     string  `json:"request_id"`
