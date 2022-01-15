@@ -142,6 +142,7 @@ func (f *Flow) Build() *Flow {
 	if noEdges || noNodes {
 		f.Error = errors.New("no vertex or edges are defined")
 	}
+	Add(f.Key, f)
 	return f
 }
 
@@ -224,4 +225,14 @@ func (f *Flow) loop(inVertex, childVertex string, inHandler Handler) *Flow {
 	}
 	f.nodes[inVertex] = loop
 	return f
+}
+
+var flowList = map[string]*Flow{}
+
+func Add(key string, flow *Flow) {
+	flowList[key] = flow
+}
+
+func Get(key string) *Flow {
+	return flowList[key]
 }

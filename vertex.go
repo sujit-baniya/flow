@@ -7,13 +7,13 @@ import (
 )
 
 type Vertex struct {
-	Key              string `json:"key"`
-	Type             string `json:"type"`
+	Key              string            `json:"key"`
+	Type             string            `json:"type"`
+	ConditionalNodes map[string]string `json:"conditional_nodes"`
 	handler          Handler
 	edges            map[string]Node
 	branches         map[string]Node
 	loops            map[string]Node
-	ConditionalNodes map[string]string `json:"conditional_nodes"`
 }
 
 func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
