@@ -22,13 +22,16 @@ func ForEachWord(ctx context.Context, d flow.Data) (flow.Data, error) {
 func WordUpperCase(ctx context.Context, d flow.Data) (flow.Data, error) {
 	var word string
 	_ = json.Unmarshal(d.Payload, &word)
-	d.Payload = flow.Payload(strings.Title(strings.ToLower(word)))
+	bt, _ := json.Marshal(strings.Title(strings.ToLower(word)))
+	d.Payload = bt
 	return d, nil
 }
 
 func AppendString(ctx context.Context, d flow.Data) (flow.Data, error) {
-	d.Payload = flow.Payload("Upper Case: " + string(d.Payload))
-	fmt.Println(d.ToString())
+	var word string
+	_ = json.Unmarshal(d.Payload, &word)
+	bt, _ := json.Marshal("Upper Case: " + word)
+	d.Payload = bt
 	return d, nil
 }
 
@@ -45,10 +48,11 @@ func main() {
 	flow1.Loop("for-each-word", "upper-case")
 	flow1.Edge("get-sentence", "for-each-word")
 	flow1.Edge("upper-case", "append-string")
-	_, e := flow1.Process(context.Background(), flow.Data{
+	resp, e := flow1.Process(context.Background(), flow.Data{
 		Payload: flow.Payload("this is a sentence"),
 	})
 	if e != nil {
 		panic(e)
 	}
+	fmt.Println(resp.ToString())
 }

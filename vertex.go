@@ -27,18 +27,26 @@ func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
 	}
 	if v.Type == "Loop" {
 		var rs []interface{}
+		var result []interface{}
 		err = json.Unmarshal(response.Payload, &rs)
 		for _, single := range rs {
 			payload, _ := json.Marshal(single)
 			dataPayload := data
 			dataPayload.Payload = payload
 			for _, loop := range v.loops {
-				response, err = loop.Process(ctx, dataPayload)
+				resp, err := loop.Process(ctx, dataPayload)
 				if err != nil {
 					return Data{}, err
 				}
+				err = json.Unmarshal(resp.Payload, &single)
+				if err != nil {
+					return Data{}, err
+				}
+				result = append(result, single)
 			}
 		}
+		tmp, _ := json.Marshal(result)
+		response.Payload = tmp
 	}
 	if val, ok := v.branches[response.GetStatus()]; ok {
 		response, err = val.Process(ctx, response)

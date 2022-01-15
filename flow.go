@@ -77,7 +77,10 @@ func (f *Flow) Process(ctx context.Context, data Data) (Data, error) {
 		return Data{}, f.Error
 	}
 	if f.firstNode == nil {
-		f.Build()
+		t := f.Build()
+		if t.Error != nil {
+			return Data{}, t.Error
+		}
 	}
 	if f.firstNode == nil {
 		return Data{}, errors.New("no edges defined")
