@@ -19,10 +19,10 @@ type Flow struct {
 }
 
 type RawFlow struct {
-	Nodes    []string   `json:"nodes"`
-	Loops    [][]string `json:"loops"`
-	Branches []Branch   `json:"branches"`
-	Edges    [][]string `json:"edges"`
+	Nodes    []string   `json:"nodes,omitempty"`
+	Loops    [][]string `json:"loops,omitempty"`
+	Branches []Branch   `json:"branches,omitempty"`
+	Edges    [][]string `json:"edges,omitempty"`
 }
 
 type Branch struct {
