@@ -2,9 +2,9 @@ package flow
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/goccy/go-json"
 )
 
 type Flow struct {
@@ -239,4 +239,8 @@ func Add(key string, flow *Flow) {
 
 func Get(key string) *Flow {
 	return flowList[key]
+}
+
+func All() map[string]*Flow {
+	return flowList
 }
