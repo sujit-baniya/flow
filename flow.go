@@ -53,6 +53,10 @@ func (f *Flow) Node(vertex string) *Flow {
 	return f
 }
 
+func (f *Flow) NodeWithHandler(node string, handler Handler) *Flow {
+	return f.node(node, handler)
+}
+
 func (f *Flow) Edge(inVertex, outVertex string) *Flow {
 	f.raw.Edges = append(f.raw.Edges, []string{inVertex, outVertex})
 	return f
