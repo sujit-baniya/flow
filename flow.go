@@ -11,6 +11,7 @@ type Flow struct {
 	Key       string
 	Error     error
 	firstNode Node
+	rawNodes  map[string]Handler
 	nodes     map[string]Node
 	inVertex  map[string]bool
 	outVertex map[string]bool
@@ -34,6 +35,7 @@ func New(raw ...Payload) *Flow {
 		nodes:     make(map[string]Node),
 		inVertex:  make(map[string]bool),
 		outVertex: make(map[string]bool),
+		rawNodes:  make(map[string]Handler),
 	}
 	if len(raw) == 0 {
 		return f
@@ -53,8 +55,9 @@ func (f *Flow) Node(vertex string) *Flow {
 	return f
 }
 
-func (f *Flow) NodeWithHandler(node string, handler Handler) *Flow {
-	return f.node(node, handler)
+func (f *Flow) AddNode(node string, handler Handler) *Flow {
+	f.rawNodes[node] = handler
+	return f
 }
 
 func (f *Flow) Edge(inVertex, outVertex string) *Flow {
@@ -104,13 +107,17 @@ func (f *Flow) AddEdge(node Node) {
 	f.nodes[node.GetKey()] = node
 }
 
+func (f *Flow) GetNodeHandler(node string) Handler {
+	return f.rawNodes[node]
+}
+
 func (f *Flow) Build() *Flow {
 	var noNodes, noEdges bool
 	for _, node := range f.raw.Nodes {
 		f.addNode(node)
 	}
 	for _, branch := range f.raw.Branches {
-		branchHandler := GetNodeHandler(branch.Key)
+		branchHandler := f.GetNodeHandler(branch.Key)
 		if branchHandler != nil {
 			for _, node := range branch.ConditionalNodes {
 				f.addNode(node)
@@ -125,14 +132,14 @@ func (f *Flow) Build() *Flow {
 		f.addNode(edge[1])
 	}
 	for _, loop := range f.raw.Loops {
-		loopHandler := GetNodeHandler(loop[0])
+		loopHandler := f.GetNodeHandler(loop[0])
 		f.addNode(loop[1])
 		if loopHandler != nil {
 			f.loop(loop[0], loop[1], loopHandler)
 		}
 	}
 	for _, branch := range f.raw.Branches {
-		branchHandler := GetNodeHandler(branch.Key)
+		branchHandler := f.GetNodeHandler(branch.Key)
 		if branchHandler == nil {
 			f.Error = errors.New(fmt.Sprintf("No branch handler defined for key '%s'", branch.Key))
 			return f
@@ -151,7 +158,7 @@ func (f *Flow) Build() *Flow {
 }
 
 func (f *Flow) addNode(node string) {
-	handler := GetNodeHandler(node)
+	handler := f.GetNodeHandler(node)
 	if handler != nil {
 		f.node(node, handler)
 	}
@@ -187,7 +194,6 @@ func (f *Flow) node(vertex string, handler Handler) *Flow {
 			branches:         make(map[string]Node),
 		}
 	}
-
 	return f
 }
 
