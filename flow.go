@@ -56,6 +56,16 @@ func New(raw ...Payload) *Flow {
 	return f
 }
 
+func NewRaw(flow RawFlow) *Flow {
+	return &Flow{
+		nodes:     make(map[string]Node),
+		inVertex:  make(map[string]bool),
+		outVertex: make(map[string]bool),
+		rawNodes:  make(map[string]Handler),
+		raw:       flow,
+	}
+}
+
 func (f *Flow) Node(vertex string) *Flow {
 	f.raw.Nodes = append(f.raw.Nodes, vertex)
 	return f
