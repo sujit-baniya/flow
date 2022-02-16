@@ -21,6 +21,7 @@ type Flow struct {
 type RawFlow struct {
 	Nodes    []string   `json:"nodes,omitempty"`
 	Loops    [][]string `json:"loops,omitempty"`
+	ForEach  []ForEach  `json:"for_each,omitempty"`
 	Branches []Branch   `json:"branches,omitempty"`
 	Edges    [][]string `json:"edges,omitempty"`
 }
@@ -28,6 +29,11 @@ type RawFlow struct {
 type Branch struct {
 	Key              string            `json:"key"`
 	ConditionalNodes map[string]string `json:"conditional_nodes"`
+}
+
+type ForEach struct {
+	InVertex    string   `json:"in_vertex"`
+	ChildVertex []string `json:"child_vertex"`
 }
 
 func New(raw ...Payload) *Flow {
@@ -74,8 +80,19 @@ func (f *Flow) ConditionalNode(vertex string, conditions map[string]string) *Flo
 	return f
 }
 
-func (f *Flow) Loop(inVertex, childVertex string) *Flow {
-	f.raw.Loops = append(f.raw.Loops, []string{inVertex, childVertex})
+func (f *Flow) Loop(inVertex string, childVertex ...string) *Flow {
+	v := []string{inVertex}
+	v = append(v, childVertex...)
+	f.raw.Loops = append(f.raw.Loops, v)
+	return f
+}
+
+func (f *Flow) ForEach(inVertex string, childVertex ...string) *Flow {
+	forEach := ForEach{
+		InVertex:    inVertex,
+		ChildVertex: childVertex,
+	}
+	f.raw.ForEach = append(f.raw.ForEach, forEach)
 	return f
 }
 
@@ -131,11 +148,15 @@ func (f *Flow) Build() *Flow {
 		f.addNode(edge[0])
 		f.addNode(edge[1])
 	}
+
 	for _, loop := range f.raw.Loops {
 		loopHandler := f.GetNodeHandler(loop[0])
-		f.addNode(loop[1])
+		childVertexes := loop[1:]
+		for _, v := range childVertexes {
+			f.addNode(v)
+		}
 		if loopHandler != nil {
-			f.loop(loop[0], loop[1], loopHandler)
+			f.loop(loop[0], loopHandler, childVertexes...)
 		}
 	}
 	for _, branch := range f.raw.Branches {
@@ -223,14 +244,17 @@ func (f *Flow) edge(inVertex, outVertex string) *Flow {
 	return f
 }
 
-func (f *Flow) loop(inVertex, childVertex string, inHandler Handler) *Flow {
-	f.outVertex[childVertex] = true
+func (f *Flow) loop(inVertex string, inHandler Handler, childVertex ...string) *Flow {
+	childVertexes := make(map[string]Node)
+	for _, v := range childVertex {
+		f.outVertex[v] = true
+		childVertexes[v] = f.nodes[v]
+	}
+
 	loop := &Vertex{
-		Key:  inVertex,
-		Type: "Loop",
-		loops: map[string]Node{
-			childVertex: f.nodes[childVertex],
-		},
+		Key:     inVertex,
+		Type:    "Loop",
+		loops:   childVertexes,
 		handler: inHandler,
 	}
 	f.nodes[inVertex] = loop
