@@ -124,6 +124,11 @@ func (f *Flow) AddEdge(node Node) {
 	f.nodes[node.GetKey()] = node
 }
 
+func (f *Flow) WithRaw(raw RawFlow) *Flow {
+	f.raw = raw
+	return f
+}
+
 func (f *Flow) GetNodeHandler(node string) Handler {
 	return f.rawNodes[node]
 }
