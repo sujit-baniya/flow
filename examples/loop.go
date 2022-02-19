@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/goccy/go-json"
 	"github.com/sujit-baniya/flow"
 	"strings"
 )
@@ -37,6 +38,7 @@ func AppendIP(ctx context.Context, d flow.Data) (flow.Data, error) {
 
 func AppendString(ctx context.Context, d flow.Data) (flow.Data, error) {
 	var word string
+	return flow.Data{}, errors.New("This is error")
 	_ = json.Unmarshal(d.Payload, &word)
 	bt, _ := json.Marshal("Upper Case: " + word)
 	d.Payload = bt

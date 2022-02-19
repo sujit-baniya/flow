@@ -1,7 +1,7 @@
 package flow
 
 import (
-	"github.com/goccy/go-json"
+	"encoding/json"
 )
 
 type Payload []byte
