@@ -20,6 +20,7 @@ type Vertex struct {
 
 func loop(ctx context.Context, loops map[string]Node, data Data, response Data) ([]interface{}, error) {
 	g, ctx := errgroup.WithContext(ctx)
+	result := make(chan interface{})
 	var rs, results []interface{}
 	err := json.Unmarshal(response.Payload, &rs)
 	if err != nil {
@@ -43,10 +44,21 @@ func loop(ctx context.Context, loops map[string]Node, data Data, response Data) 
 				if err != nil {
 					return err
 				}
-				results = append(results, single)
+				select {
+				case result <- single:
+				case <-ctx.Done():
+					return ctx.Err()
+				}
 			}
 			return nil
 		})
+	}
+	go func() {
+		g.Wait()
+		close(result)
+	}()
+	for ch := range result {
+		results = append(results, ch)
 	}
 	if err := g.Wait(); err != nil {
 		return nil, err
@@ -68,25 +80,6 @@ func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
 		if err != nil {
 			return Data{}, err
 		}
-		/*var rs []interface{}
-		var result []interface{}
-		err = json.Unmarshal(response.Payload, &rs)
-		for _, single := range rs {
-			payload, _ := json.Marshal(single)
-			dataPayload := data
-			dataPayload.Payload = payload
-			for _, loop := range v.loops {
-				resp, err := loop.Process(ctx, dataPayload)
-				if err != nil {
-					return Data{}, err
-				}
-				err = json.Unmarshal(resp.Payload, &single)
-				if err != nil {
-					return Data{}, err
-				}
-				result = append(result, single)
-			}
-		}*/
 		tmp, err := json.Marshal(result)
 		if err != nil {
 			return Data{}, err

@@ -1,25 +1,24 @@
-package main
+package flow
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/sujit-baniya/flow"
 	"strings"
+	"testing"
 )
 
-func GetSentence(ctx context.Context, d flow.Data) (flow.Data, error) {
+func GetSentence(ctx context.Context, d Data) (Data, error) {
 	words := strings.Split(d.ToString(), ` `)
 	bt, _ := json.Marshal(words)
 	d.Payload = bt
 	return d, nil
 }
 
-func ForEachWord(ctx context.Context, d flow.Data) (flow.Data, error) {
+func ForEachWord(ctx context.Context, d Data) (Data, error) {
 	return d, nil
 }
 
-func WordUpperCase(ctx context.Context, d flow.Data) (flow.Data, error) {
+func WordUpperCase(ctx context.Context, d Data) (Data, error) {
 	var word string
 	_ = json.Unmarshal(d.Payload, &word)
 	bt, _ := json.Marshal(strings.Title(strings.ToLower(word)))
@@ -27,7 +26,7 @@ func WordUpperCase(ctx context.Context, d flow.Data) (flow.Data, error) {
 	return d, nil
 }
 
-func AppendIP(ctx context.Context, d flow.Data) (flow.Data, error) {
+func AppendIP(ctx context.Context, d Data) (Data, error) {
 	var word string
 	_ = json.Unmarshal(d.Payload, &word)
 	bt, _ := json.Marshal("IP: " + word)
@@ -35,7 +34,7 @@ func AppendIP(ctx context.Context, d flow.Data) (flow.Data, error) {
 	return d, nil
 }
 
-func AppendString(ctx context.Context, d flow.Data) (flow.Data, error) {
+func AppendString(ctx context.Context, d Data) (Data, error) {
 	var word string
 	_ = json.Unmarshal(d.Payload, &word)
 	bt, _ := json.Marshal("Upper Case: " + word)
@@ -43,8 +42,8 @@ func AppendString(ctx context.Context, d flow.Data) (flow.Data, error) {
 	return d, nil
 }
 
-func main() {
-	flow1 := flow.New()
+func BenchmarkFlow_Loop(b *testing.B) {
+	flow1 := New()
 	flow1.AddNode("get-sentence", GetSentence)
 	flow1.AddNode("for-each-word", ForEachWord)
 	flow1.AddNode("upper-case", WordUpperCase)
@@ -53,11 +52,9 @@ func main() {
 	flow1.Loop("for-each-word", "append-ip", "upper-case")
 	flow1.Edge("get-sentence", "for-each-word")
 	flow1.Edge("upper-case", "append-string")
-	resp, e := flow1.Process(context.Background(), flow.Data{
-		Payload: flow.Payload("this is a sentence"),
-	})
-	if e != nil {
-		panic(e)
+	for i := 0; i < b.N; i++ {
+		flow1.Process(context.Background(), Data{
+			Payload: Payload("this is a sentence"),
+		})
 	}
-	fmt.Println(resp.ToString())
 }
