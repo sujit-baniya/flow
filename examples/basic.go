@@ -27,7 +27,7 @@ func basicFlow() {
 	if e != nil {
 		panic(e)
 	}
-	fmt.Println(response.ToString())
+	fmt.Println(response)
 }
 
 func basicRawFlow() {
@@ -45,7 +45,7 @@ func basicRawFlow() {
 	if e != nil {
 		panic(e)
 	}
-	fmt.Println(response.ToString())
+	fmt.Println(response)
 }
 
 func main() {

@@ -22,12 +22,18 @@ func WordUpperCase(ctx context.Context, d Data) (Data, error) {
 }
 
 func AppendIP(ctx context.Context, d Data) (Data, error) {
-	d.Payload = "IP: " + d.Payload.(string)
+	var s strings.Builder
+	s.WriteString("IP: ")
+	s.WriteString(d.Payload.(string))
+	d.Payload = s.String()
 	return d, nil
 }
 
 func AppendString(ctx context.Context, d Data) (Data, error) {
-	d.Payload = "Append: " + d.Payload.(string)
+	var s strings.Builder
+	s.WriteString("Append: ")
+	s.WriteString(d.Payload.(string))
+	d.Payload = s.String()
 	return d, nil
 }
 

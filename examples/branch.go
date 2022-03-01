@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/sujit-baniya/flow"
 )
@@ -13,8 +12,8 @@ func GetRegistration(ctx context.Context, d flow.Data) (flow.Data, error) {
 
 // VerifyUser Conditional Vertex
 func VerifyUser(ctx context.Context, d flow.Data) (flow.Data, error) {
-	var reg Registration
-	d.ConvertTo(&reg)
+	reg := d.Payload.(Registration)
+
 	if _, ok := registeredEmail[reg.Email]; !ok {
 		d.Status = "pass"
 	} else {
@@ -56,22 +55,19 @@ func basicRegistrationFlow() {
 		Email:    "test@gmail.com",
 		Password: "admin",
 	}
-	reg1, _ := json.Marshal(registration1)
-
 	registration2 := Registration{
 		Email:    "test1@gmail.com",
 		Password: "admin",
 	}
-	reg2, _ := json.Marshal(registration2)
 	response, e := flow1.Process(context.Background(), flow.Data{
-		Payload: reg1,
+		Payload: registration1,
 	})
 	if e != nil {
 		panic(e)
 	}
 	fmt.Println(response.ToString())
 	response, e = flow1.Process(context.Background(), flow.Data{
-		Payload: reg2,
+		Payload: registration2,
 	})
 	if e != nil {
 		panic(e)
@@ -103,22 +99,19 @@ func basicRegistrationRawFlow() {
 		Email:    "test@gmail.com",
 		Password: "admin",
 	}
-	reg1, _ := json.Marshal(registration1)
-
 	registration2 := Registration{
 		Email:    "test1@gmail.com",
 		Password: "admin",
 	}
-	reg2, _ := json.Marshal(registration2)
 	response, e := flow1.Process(context.Background(), flow.Data{
-		Payload: reg1,
+		Payload: registration1,
 	})
 	if e != nil {
 		panic(e)
 	}
 	fmt.Println(response.ToString())
 	response, e = flow1.Process(context.Background(), flow.Data{
-		Payload: reg2,
+		Payload: registration2,
 	})
 	if e != nil {
 		panic(e)
