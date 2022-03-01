@@ -2,15 +2,13 @@ package flow
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"testing"
 )
 
 func GetSentence(ctx context.Context, d Data) (Data, error) {
-	words := strings.Split(d.ToString(), ` `)
-	bt, _ := json.Marshal(words)
-	d.Payload = bt
+	words := strings.Split(d.Payload.(string), ` `)
+	d.Payload = words
 	return d, nil
 }
 
@@ -19,26 +17,17 @@ func ForEachWord(ctx context.Context, d Data) (Data, error) {
 }
 
 func WordUpperCase(ctx context.Context, d Data) (Data, error) {
-	var word string
-	_ = json.Unmarshal(d.Payload, &word)
-	bt, _ := json.Marshal(strings.Title(strings.ToLower(word)))
-	d.Payload = bt
+	d.Payload = strings.Title(strings.ToLower(d.Payload.(string)))
 	return d, nil
 }
 
 func AppendIP(ctx context.Context, d Data) (Data, error) {
-	var word string
-	_ = json.Unmarshal(d.Payload, &word)
-	bt, _ := json.Marshal("IP: " + word)
-	d.Payload = bt
+	d.Payload = "IP: " + d.Payload.(string)
 	return d, nil
 }
 
 func AppendString(ctx context.Context, d Data) (Data, error) {
-	var word string
-	_ = json.Unmarshal(d.Payload, &word)
-	bt, _ := json.Marshal("Upper Case: " + word)
-	d.Payload = bt
+	d.Payload = "Append: " + d.Payload.(string)
 	return d, nil
 }
 

@@ -36,7 +36,7 @@ type ForEach struct {
 	ChildVertex []string `json:"child_vertex"`
 }
 
-func New(raw ...Payload) *Flow {
+func New(raw ...[]byte) *Flow {
 	f := &Flow{
 		nodes:     make(map[string]Node),
 		inVertex:  make(map[string]bool),

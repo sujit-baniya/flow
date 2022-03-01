@@ -1,10 +1,6 @@
 package flow
 
-import (
-	"encoding/json"
-)
-
-type Payload []byte
+type Payload interface{}
 
 type Data struct {
 	RequestID     string  `json:"request_id"`
@@ -12,14 +8,6 @@ type Data struct {
 	Status        string  `json:"status"`
 	CurrentVertex string  `json:"current_vertex"`
 	FailedReason  error   `json:"failed_reason"`
-}
-
-func (d Data) ConvertTo(rs interface{}) error {
-	return json.Unmarshal(d.Payload, rs)
-}
-
-func (d Data) ToString() string {
-	return string(d.Payload)
 }
 
 func (d Data) GetStatus() string {

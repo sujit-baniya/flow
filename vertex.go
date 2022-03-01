@@ -2,7 +2,6 @@ package flow
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"golang.org/x/sync/errgroup"
 	"reflect"
@@ -21,31 +20,20 @@ type Vertex struct {
 func loop(ctx context.Context, loops map[string]Node, data Data, response Data) ([]interface{}, error) {
 	g, ctx := errgroup.WithContext(ctx)
 	result := make(chan interface{})
-	var rs, results []interface{}
-	err := json.Unmarshal(response.Payload, &rs)
-	if err != nil {
-		return nil, err
-	}
-	for _, single := range rs {
-		single := single
+	var results []interface{}
+	rs := reflect.ValueOf(response.Payload)
+	for i := 0; i < rs.Len(); i++ {
+		single := rs.Index(i).Interface()
 		g.Go(func() error {
-			payload, err := json.Marshal(single)
-			if err != nil {
-				return err
-			}
 			dataPayload := data
-			dataPayload.Payload = payload
+			dataPayload.Payload = single
 			for _, loop := range loops {
 				resp, err := loop.Process(ctx, dataPayload)
 				if err != nil {
 					return err
 				}
-				err = json.Unmarshal(resp.Payload, &single)
-				if err != nil {
-					return err
-				}
 				select {
-				case result <- single:
+				case result <- resp.Payload:
 				case <-ctx.Done():
 					return ctx.Err()
 				}
@@ -80,11 +68,7 @@ func (v *Vertex) Process(ctx context.Context, data Data) (Data, error) {
 		if err != nil {
 			return Data{}, err
 		}
-		tmp, err := json.Marshal(result)
-		if err != nil {
-			return Data{}, err
-		}
-		response.Payload = tmp
+		response.Payload = result
 	}
 	if val, ok := v.branches[response.GetStatus()]; ok {
 		response, err = val.Process(ctx, response)
