@@ -16,14 +16,14 @@ func Send(ctx context.Context, d flow.Data) (flow.Data, error) {
 	return d, nil
 }
 
-func basicNodes() {
-	flow.AddNode("message", Message)
-	flow.AddNode("send", Send)
+func basicNodes(flow1 *flow.Flow) {
+	flow1.AddNode("message", Message)
+	flow1.AddNode("send", Send)
 }
 
 func basicFlow() {
-	basicNodes()
 	flow1 := flow.New()
+	basicNodes(flow1)
 	flow1.Edge("message", "send")
 	response, e := flow1.Build().Process(context.Background(), flow.Data{
 		Payload: flow.Payload("Payload"),
@@ -35,13 +35,13 @@ func basicFlow() {
 }
 
 func basicRawFlow() {
-	basicNodes()
 	rawFlow := []byte(`{
 		"edges": [
 			["message", "send"]
 		]
 	}`)
 	flow1 := flow.New(rawFlow)
+	basicNodes(flow1)
 	response, e := flow1.Process(context.Background(), flow.Data{
 		Payload: flow.Payload("Payload"),
 	})

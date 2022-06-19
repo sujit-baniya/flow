@@ -33,11 +33,11 @@ func CancelRegistration(ctx context.Context, d flow.Data) (flow.Data, error) {
 	return d, nil
 }
 
-func registrationNodes() {
-	flow.AddNode("get-registration", GetRegistration)
-	flow.AddNode("create-user", CreateUser)
-	flow.AddNode("cancel-registration", CancelRegistration)
-	flow.AddNode("verify-user", VerifyUser)
+func registrationNodes(flow1 *flow.Flow) {
+	flow1.AddNode("get-registration", GetRegistration)
+	flow1.AddNode("create-user", CreateUser)
+	flow1.AddNode("cancel-registration", CancelRegistration)
+	flow1.AddNode("verify-user", VerifyUser)
 }
 
 type Registration struct {
@@ -48,8 +48,8 @@ type Registration struct {
 var registeredEmail = map[string]bool{"test@gmail.com": true}
 
 func basicRegistrationFlow() {
-	registrationNodes()
 	flow1 := flow.New()
+	registrationNodes(flow1)
 	flow1.ConditionalNode("verify-user", map[string]string{
 		"pass": "create-user",
 		"fail": "cancel-registration",
@@ -84,7 +84,6 @@ func basicRegistrationFlow() {
 }
 
 func basicRegistrationRawFlow() {
-	registrationNodes()
 	rawFlow := []byte(`{
 		"edges": [
 			["get-registration", "verify-user"]
@@ -100,6 +99,7 @@ func basicRegistrationRawFlow() {
 		]
 	}`)
 	flow1 := flow.New(rawFlow)
+	registrationNodes(flow1)
 	registration1 := Registration{
 		Email:    "test@gmail.com",
 		Password: "admin",

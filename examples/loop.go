@@ -32,16 +32,16 @@ func AppendString(ctx context.Context, d flow.Data) (flow.Data, error) {
 	return d, nil
 }
 
-func wordNodes() {
-	flow.AddNode("get-sentence", GetSentence)
-	flow.AddNode("for-each-word", ForEachWord)
-	flow.AddNode("upper-case", WordUpperCase)
-	flow.AddNode("append-string", AppendString)
+func wordNodes(flow1 *flow.Flow) {
+	flow1.AddNode("get-sentence", GetSentence)
+	flow1.AddNode("for-each-word", ForEachWord)
+	flow1.AddNode("upper-case", WordUpperCase)
+	flow1.AddNode("append-string", AppendString)
 }
 
 func main() {
-	wordNodes()
 	flow1 := flow.New()
+	wordNodes(flow1)
 	flow1.Loop("for-each-word", "upper-case")
 	flow1.Edge("get-sentence", "for-each-word")
 	flow1.Edge("upper-case", "append-string")
